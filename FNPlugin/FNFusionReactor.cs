@@ -141,13 +141,24 @@ namespace FNPlugin {
 
         protected override double returnReactorResource(double resource) {
             double return_amount = resource / 2.0;
-            deuterium.amount += return_amount;
-            tritium.amount += return_amount;
+            if (fuel_mode == 0 || fuel_mode == 1) {
+                deuterium.amount += return_amount;
+                if (fuel_mode == 0) {
+                    tritium.amount += return_amount;
+                } else {
+                    he3.amount += return_amount;
+                }
+            } else {
+                he3.amount += return_amount * 2.0;
+            }
             if (deuterium.amount > deuterium.maxAmount) {
                 deuterium.amount = deuterium.maxAmount;
             }
             if (tritium.amount > tritium.maxAmount) {
                 tritium.amount = tritium.maxAmount;
+            }
+            if (he3.amount > he3.maxAmount) {
+                he3.amount = he3.maxAmount;
             }
             return resource;
         }
