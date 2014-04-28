@@ -123,7 +123,7 @@ namespace FNPlugin {
                     float charge_to_add = consumeFNResource(mult * 2.0 * chargeNeeded / 1000.0 * TimeWarp.fixedDeltaTime, FNResourceManager.FNRESOURCE_MEGAJOULES) * 1000.0f / chargeNeeded;
                     chargestatus += charge_to_add;
 
-                    if (charge_to_add < 2f * TimeWarp.fixedDeltaTime) {
+                    if (charge_to_add < mult * 2f * TimeWarp.fixedDeltaTime) {
                         float more_charge_to_add = ORSHelper.fixedRequestResource(part,"ElectricCharge", mult * 2 * chargeNeeded * TimeWarp.fixedDeltaTime) / chargeNeeded;
                         charge_to_add += more_charge_to_add;
                         chargestatus += more_charge_to_add;
