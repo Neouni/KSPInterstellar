@@ -18,29 +18,24 @@ namespace OpenResourceSystem {
         }
 
         public static double fixedRequestResource(Part part, string resourcename, double resource_amount) {
-            List<PartResource> prl = new List<PartResource>();
-            List<Part> parts = new List<Part>();
-            part.GetConnectedResources(PartResourceLibrary.Instance.GetDefinition(resourcename).id, prl);
             ResourceFlowMode flow = PartResourceLibrary.Instance.GetDefinition(resourcename).resourceFlowMode;
-            prl = prl.Where(p => p.flowState == true).ToList();
-            double max_available = 0;
-            double spare_capacity = 0;
-            foreach (PartResource partresource in prl) {
-                parts.Add(partresource.part);
-                max_available += partresource.amount;
-                spare_capacity += partresource.maxAmount - partresource.amount;
-            }
-
             if (flow == ResourceFlowMode.ALL_VESSEL) { // use our code
-                double resource_left_to_draw = 0;
+                List<PartResource> prl = new List<PartResource>();
+                part.GetConnectedResources(PartResourceLibrary.Instance.GetDefinition(resourcename).id, prl);
+                prl = prl.Where(p => p.flowState == true).ToList();
+                double max_available = 0;
+                double spare_capacity = 0;
+                foreach (PartResource partresource in prl) {
+                    max_available += partresource.amount;
+                    spare_capacity += partresource.maxAmount - partresource.amount;
+                }
+
                 double total_resource_change = 0;
                 double res_ratio = 0;
                 
                 if (resource_amount > 0) {
-                    resource_left_to_draw = Math.Min(resource_amount, max_available);
                     res_ratio = Math.Min(resource_amount / max_available,1);
                 } else {
-                    resource_left_to_draw = Math.Max(-spare_capacity, resource_amount);
                     res_ratio = Math.Min(-resource_amount / spare_capacity,1);
                 }
 
@@ -49,21 +44,17 @@ namespace OpenResourceSystem {
                 } else {
                     foreach (PartResource local_part_resource in prl) {
                         if (resource_amount > 0) {
-                            local_part_resource.amount = local_part_resource.amount - local_part_resource.amount * res_ratio;
                             total_resource_change += local_part_resource.amount * res_ratio;
+                            local_part_resource.amount = local_part_resource.amount - local_part_resource.amount * res_ratio;
                         }else{
-                            local_part_resource.amount = local_part_resource.amount + (local_part_resource.maxAmount - local_part_resource.amount) * res_ratio;
                             total_resource_change -= (local_part_resource.maxAmount - local_part_resource.amount) * res_ratio;
+                            local_part_resource.amount = local_part_resource.amount + (local_part_resource.maxAmount - local_part_resource.amount) * res_ratio;
                         }
                     }
                 }
                 return total_resource_change;
             } else {
-                if (resource_amount > 0) {
-                    return part.RequestResource(resourcename, Math.Min(resource_amount, max_available));
-                } else {
-                    return part.RequestResource(resourcename, Math.Max(-spare_capacity, resource_amount));
-                }
+                return part.RequestResource(resourcename, resource_amount);
             }
         }
     }
