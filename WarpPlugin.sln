@@ -36,6 +36,7 @@ Global
 		{AD686AF3-DDDC-4991-909F-EAD9C16C469B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		StartupItem = FNPlugin\WarpPlugin.csproj
