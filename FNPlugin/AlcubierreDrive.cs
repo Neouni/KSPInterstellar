@@ -1,4 +1,4 @@
-extern alias ORSv1_4_3;
+﻿extern alias ORSv1_4_3;
 using ORSv1_4_3::OpenResourceSystem;
 
 using System;
@@ -148,7 +148,7 @@ namespace FNPlugin
             }
 
 
-            float atmosphere_height = (float)this.vessel.mainBody.atmosphereDepth;
+			float atmosphere_height = this.vessel.mainBody.maxAtmosphereAltitude;
             if (this.vessel.altitude <= atmosphere_height && vessel.mainBody.flightGlobalsIndex != 0) {
 				ScreenMessages.PostScreenMessage("Cannot deactivate warp drive within the atmosphere!", 5.0f, ScreenMessageStyle.UPPER_CENTER);
                 return;

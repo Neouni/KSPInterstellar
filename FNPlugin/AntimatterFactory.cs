@@ -18,9 +18,9 @@ namespace FNPlugin {
             vessel = part.vessel;
             if (HighLogic.CurrentGame != null) {
                 if (HighLogic.CurrentGame.Mode == Game.Modes.CAREER) {
-                    if (PluginHelper.hasTech("antimatterPower")) {
+                    if (PluginHelper.hasTech("interstellarTechAntimatterPower")) {
                         
-                    } else if (PluginHelper.hasTech("particleAccelerator")) {
+                    } else if (PluginHelper.hasTech("interstellarTechAccelerator")) {
                         efficiency = efficiency / 100;
                     } else {
                         efficiency = efficiency / 10000;

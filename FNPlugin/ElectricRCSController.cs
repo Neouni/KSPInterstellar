@@ -45,7 +45,6 @@ namespace FNPlugin {
             if (attachedRCS != null && HighLogic.LoadedSceneIsFlight && vessel.ActionGroups[KSPActionGroup.RCS]) {
                 double total_thrust = attachedRCS.thrustForces.Sum(frc => frc);
                 float curve_eval_point = (float)Math.Min(FlightGlobals.getStaticPressure(vessel.transform.position), 1.0);
-                //double currentIsp = attachedRCS.atmosphereCurve.Evaluate(curve_eval_point);
                 double currentIsp = attachedRCS.atmosphereCurve.Evaluate(curve_eval_point);
 
                 double power_required = total_thrust * currentIsp * 9.82 * 0.5 / 1000.0;
