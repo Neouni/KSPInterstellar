@@ -6,7 +6,7 @@ using System.Text;
 using UnityEngine;
 
 namespace FNPlugin {
-    class MicrowavePowerReceiver : FNResourceSuppliableModule, FNThermalSource {
+    class MicrowavePowerReceiver : FNResourceSuppliableModule, IThermalSource {
         //Persistent True
         [KSPField(isPersistant = true)]
         public bool receiverIsEnabled;
@@ -64,6 +64,21 @@ namespace FNPlugin {
         protected bool has_transmitter = false;
         static readonly double microwaveAngleTan = Math.Tan(GameConstants.microwave_angle);//this doesn't change during game so it's readonly 
         double penaltyFreeDistance = 1;//should be set to proper value by OnStart method
+
+        public float CoreTemperature { get { return 1500; } }
+
+        public float MaximumPower { get { return MaximumThermalPower; } }
+
+        public float MaximumThermalPower { get { return ThermalPower; } }
+
+        public float MinimumPower { get { return 0; } }
+
+        public bool IsVolatileSource { get { return true; } }
+
+        public bool IsActive { get { return receiverIsEnabled; } }
+
+        public bool IsNuclear { get { return false; } }
+
 
         [KSPEvent(guiActive = true, guiName = "Activate Receiver", active = true)]
         public void ActivateReceiver() {
@@ -314,7 +329,7 @@ namespace FNPlugin {
             return 1500.0f;
         }
 
-        public virtual float getCoreTempAtRadiatorTemp(float rad_temp) {
+        public virtual float GetCoreTempAtRadiatorTemp(float rad_temp) {
             if (isThermalReceiver) {
                 return 1500;
             } else {
@@ -326,7 +341,7 @@ namespace FNPlugin {
             return ThermalPower;
         }
 
-        public float getThermalPowerAtTemp(float temp) {
+        public float GetThermalPowerAtTemp(float temp) {
             return ThermalPower;
         }
 
