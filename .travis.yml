@@ -1,6 +1,6 @@
-language: csharp
-solution: WarpPlugin.sln
-before_install:
-  - sudo apt-get install nunit-console
-before_script:
-  - nuget restore WarpPlugin.sln
+language: c
+
+install:
+  - sudo apt-get install mono-devel mono-gmcs nunit-console
+script:
+  - xbuild WarpPlugin.sln
