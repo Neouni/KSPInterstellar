@@ -1,2 +1,6 @@
 language: csharp
 solution: WarpPlugin.sln
+before_install:
+  - sudo apt-get install nunit-console
+before_script:
+  - nuget restore WarpPlugin.sln
