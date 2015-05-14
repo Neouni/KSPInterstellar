@@ -1,3 +1,6 @@
+extern alias ORSv1_4_2;
+using ORSv1_4_2::OpenResourceSystem;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -5,7 +8,7 @@ using System.Text;
 using UnityEngine;
 
 namespace FNPlugin{
-	class FNNozzleControllerFX : FNResourceSuppliableModule, FNUpgradeableModule{
+	class FNNozzleControllerFX : FNResourceSuppliableModule, IUpgradeableModule{
 		// Persistent True
 		[KSPField(isPersistant = true)]
 		public bool IsEnabled;
@@ -57,7 +60,7 @@ namespace FNPlugin{
 		protected bool hasrequiredupgrade = false;
 		protected bool hasstarted = false;
 		protected ModuleEnginesFX myAttachedEngine;
-		protected FNThermalSource myAttachedReactor;
+		protected IThermalSource myAttachedReactor;
 		protected bool currentpropellant_is_jet = false;
 		protected double fuel_flow_rate = 0;
 		protected int thrustLimitRatio = 0;
@@ -76,6 +79,8 @@ namespace FNPlugin{
 		//Static
 		static Dictionary<string, double> intake_amounts = new Dictionary<string, double>();
 		static Dictionary<string, double> fuel_flow_amounts = new Dictionary<string, double>();
+
+        public String UpgradeTechnology { get { return upgradeTechReq; } }
 
 
 		[KSPEvent(guiActive = true, guiName = "Toggle Propellant", active = true)]
@@ -97,7 +102,7 @@ namespace FNPlugin{
 			if (ResearchAndDevelopment.Instance == null) { return;}
 			if (isupgraded || ResearchAndDevelopment.Instance.Science < upgradeCost) { return; }
 			upgradePartModule ();
-			ResearchAndDevelopment.Instance.Science = ResearchAndDevelopment.Instance.Science - upgradeCost;
+            ResearchAndDevelopment.Instance.AddScience(-upgradeCost, TransactionReasons.RnDPartPurchase);
 		}
 
 		public void upgradePartModule() {
@@ -115,7 +120,8 @@ namespace FNPlugin{
             engineType = originalName;
             // check whether we have the technologies available to be able to perform an upgrade
             if (state == StartState.Editor) {
-                if (hasTechsRequiredToUpgrade()) {
+                if (this.HasTechsRequiredToUpgrade())
+                {
                     isupgraded = true;
                     upgradePartModule();
                 }
@@ -136,7 +142,7 @@ namespace FNPlugin{
 			// find attached thermal source
 			foreach (AttachNode attach_node in part.attachNodes) {
 				if (attach_node.attachedPart != null) {
-					List<FNThermalSource> sources = attach_node.attachedPart.FindModulesImplementing<FNThermalSource> ();
+					List<IThermalSource> sources = attach_node.attachedPart.FindModulesImplementing<IThermalSource> ();
 					if (sources.Count > 0) {
 						myAttachedReactor = sources.First ();
 						if (myAttachedReactor != null) {
@@ -177,8 +183,7 @@ namespace FNPlugin{
 			float currentpropellant = 0;
 			float maxpropellant = 0;
 
-			List<PartResource> partresources = new List<PartResource>();
-			part.GetConnectedResources(myAttachedEngine.propellants[0].id, partresources);
+            List<PartResource> partresources = part.GetConnectedResources(myAttachedEngine.propellants[0].name).ToList();
 
 			foreach (PartResource partresource in partresources) {
 				currentpropellant += (float) partresource.amount;
@@ -253,8 +258,7 @@ namespace FNPlugin{
 			List<Propellant> curEngine_propellants_list = new List<Propellant>();
 			curEngine_propellants_list = myAttachedEngine.propellants;
 			foreach(Propellant curEngine_propellant in curEngine_propellants_list) {
-				List<PartResource> partresources = new List<PartResource>();
-				part.GetConnectedResources(curEngine_propellant.id, partresources);
+				List<PartResource> partresources = part.GetConnectedResources(curEngine_propellant.name).ToList();
 
 				if (partresources.Count == 0 || !PartResourceLibrary.Instance.resourceDefinitions.Contains(list_of_propellants[0].name)) {
 					next_propellant = true;
@@ -271,11 +275,11 @@ namespace FNPlugin{
 			// recaculate ISP based on power and core temp available
 			FloatCurve newISP = new FloatCurve();
 			FloatCurve vCurve = new FloatCurve ();
-			maxISP = (float)(Math.Sqrt ((double)myAttachedReactor.getCoreTemp ()) * isp_temp_rat * ispMultiplier);
+			maxISP = (float)(Math.Sqrt ((double)myAttachedReactor.CoreTemperature) * isp_temp_rat * ispMultiplier);
 			if (!currentpropellant_is_jet) {
 				minISP = maxISP * 0.4f;
-				newISP.Add (0, maxISP, 0, 0);
-				newISP.Add (1, minISP, 0, 0);
+				newISP.Add (0, Mathf.Min(maxISP, 2997.13f), 0, 0);
+                newISP.Add(1, Mathf.Min(minISP, 2997.13f), 0, 0);
 				myAttachedEngine.useVelocityCurve = false;
 				myAttachedEngine.useEngineResponseTime = false;
 			} else {
@@ -285,9 +289,10 @@ namespace FNPlugin{
 						maxISP = maxISP / 2.5f;
 					}
 				}
-				newISP.Add(0, maxISP*4.0f/5.0f);
-				newISP.Add(0.15f, maxISP);
-				newISP.Add(1, maxISP*2.0f/3.0f);
+                newISP.Add(0, Mathf.Min(maxISP * 4.0f / 5.0f, 2997.13f));
+                newISP.Add(0.15f, Mathf.Min(maxISP, 2997.13f));
+                newISP.Add(0.3f, Mathf.Min(maxISP * 4.0f / 5.0f, 2997.13f));
+                newISP.Add(1, Mathf.Min(maxISP * 2.0f / 3.0f, 2997.13f));
 				vCurve.Add(0, 0.7f);
 				vCurve.Add((float)(maxISP*g0*1.0/3.0), 0.9f);
 				vCurve.Add((float)(maxISP*g0), 1.0f);
@@ -299,7 +304,7 @@ namespace FNPlugin{
 
 			myAttachedEngine.atmosphereCurve = newISP;
 			myAttachedEngine.velocityCurve = vCurve;
-			assThermalPower = myAttachedReactor.getThermalPower();
+			assThermalPower = myAttachedReactor.MaximumPower;
 		}
 
 		public float getAtmosphericLimit() {
@@ -332,7 +337,7 @@ namespace FNPlugin{
 
 		public override void OnFixedUpdate() {
             if (myAttachedEngine.isOperational && myAttachedEngine.currentThrottle > 0 && myAttachedReactor != null) {
-				if (!myAttachedReactor.isActive()) {
+				if (!myAttachedReactor.IsActive) {
 					myAttachedReactor.enableIfPossible();
 				}
 				updateIspEngineParams ();
@@ -361,7 +366,16 @@ namespace FNPlugin{
                     if (double.IsNaN(proportion) || double.IsInfinity(proportion)) {
                         proportion = 1;
                     }
-                    part.temperature = (float)Math.Max((Math.Sqrt(vessel.srf_velocity.magnitude) * 20.0 / GameConstants.atmospheric_non_precooled_limit) * part.maxTemp * proportion, 1);
+                    float temp = (float)Math.Max((Math.Sqrt(vessel.srf_velocity.magnitude) * 20.0 / GameConstants.atmospheric_non_precooled_limit) * part.maxTemp * proportion, 1);
+                    if (temp > part.maxTemp - 10.0f)
+                    {
+                        ScreenMessages.PostScreenMessage("Engine Shutdown: Catastrophic overheating was imminent!", 5.0f, ScreenMessageStyle.UPPER_CENTER);
+                        myAttachedEngine.Shutdown();
+                        part.temperature = 1;
+                    } else
+                    {
+                        part.temperature = temp;
+                    }
                 }
 				double thermal_power_received = consumeFNResource (assThermalPower * TimeWarp.fixedDeltaTime * myAttachedEngine.currentThrottle, FNResourceManager.FNRESOURCE_THERMALPOWER) / TimeWarp.fixedDeltaTime;
 				consumeFNResource (thermal_power_received * TimeWarp.fixedDeltaTime, FNResourceManager.FNRESOURCE_WASTEHEAT);
@@ -425,24 +439,10 @@ namespace FNPlugin{
 			static_updating2 = true;
 		}
 
-        public bool hasTechsRequiredToUpgrade() {
-            if (HighLogic.CurrentGame != null) {
-                if (HighLogic.CurrentGame.Mode == Game.Modes.CAREER) {
-                    if (upgradeTechReq != null) {
-                        if (PluginHelper.hasTech(upgradeTechReq)) {
-                            return true;
-                        }
-                    }
-                } else {
-                    return true;
-                }
-            }
-            return false;
-        }
-
 		public override string GetInfo() {
 			bool upgraded = false;
-            if (hasTechsRequiredToUpgrade()) {
+            if (this.HasTechsRequiredToUpgrade())
+            {
                 upgraded = true;
             }
 			ConfigNode[] prop_nodes;
@@ -478,8 +478,7 @@ namespace FNPlugin{
 					nozzle.static_updating = false;
 				}
 
-				List<PartResource> partresources = new List<PartResource> ();
-				vess.rootPart.GetConnectedResources (PartResourceLibrary.Instance.GetDefinition (resourcename).id, partresources);
+				List<PartResource> partresources = vess.rootPart.GetConnectedResources (resourcename).ToList();
 				double currentintakeatm = 0;
 				foreach (PartResource partresource in partresources) {
 					currentintakeatm += partresource.amount;

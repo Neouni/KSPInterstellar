@@ -1,13 +1,14 @@
-﻿extern alias ORSv1_1;
+﻿extern alias ORSv1_4_2;
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
-using ORSv1_1::OpenResourceSystem;
+using ORSv1_4_2::OpenResourceSystem;
 
 namespace FNPlugin {
+    [KSPModule("Radioactive Decay")]
     class ModuleElementRadioactiveDecay : PartModule {
         // Persistent False
         [KSPField(isPersistant = false)]
@@ -31,7 +32,6 @@ namespace FNPlugin {
                 return;
             }
             decay_resource = part.Resources[resourceName];
-            part.force_activate();   
             double time_diff = lastActiveTime - Planetarium.GetUniversalTime();
             if (PartResourceLibrary.Instance.resourceDefinitions.Contains(decayProduct)) {
                 density_rat = decay_resource.info.density / PartResourceLibrary.Instance.GetDefinition(decayProduct).density;
@@ -46,14 +46,23 @@ namespace FNPlugin {
             }
         }
 
-        public override void OnFixedUpdate() {
-            double decay_amount = decayConstant * decay_resource.amount * TimeWarp.fixedDeltaTime;
-            decay_resource.amount -= decay_amount;
-            if (PartResourceLibrary.Instance.resourceDefinitions.Contains(decayProduct)) {
-                ORSHelper.fixedRequestResource(part, decayProduct, -decay_amount*density_rat);
-            }
+        public void FixedUpdate() {
+            if (HighLogic.LoadedSceneIsFlight)
+            {
+                double decay_amount = decayConstant * decay_resource.amount * TimeWarp.fixedDeltaTime;
+                decay_resource.amount -= decay_amount;
+                if (PartResourceLibrary.Instance.resourceDefinitions.Contains(decayProduct))
+                {
+                    ORSHelper.fixedRequestResource(part, decayProduct, -decay_amount * density_rat);
+                }
 
-            lastActiveTime = (float) Planetarium.GetUniversalTime();
+                lastActiveTime = (float)Planetarium.GetUniversalTime();
+            }
+        }
+
+        public override string GetInfo()
+        {
+            return "Radioactive Decay";
         }
 
     }

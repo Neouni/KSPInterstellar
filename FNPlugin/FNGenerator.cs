@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace FNPlugin {
     [KSPModule("Electrical Generator")]
-	class FNGenerator : FNResourceSuppliableModule, FNUpgradeableModule{
+	class FNGenerator : FNResourceSuppliableModule, IUpgradeableModule{
 		// Persistent True
 		[KSPField(isPersistant = true)]
 		public bool IsEnabled = true;
@@ -61,13 +61,15 @@ namespace FNPlugin {
 		protected float sectracker = 0;
 		protected bool play_down = true;
 		protected bool play_up = true;
-		protected FNThermalSource myAttachedReactor;
+		protected IThermalSource myAttachedReactor;
 		protected bool hasrequiredupgrade = false;
 		protected long last_draw_update = 0;
 		protected int shutdown_counter = 0;
 		protected Animation anim;
 		protected bool hasstarted = false;
         protected long update_count = 0;
+
+        public String UpgradeTechnology { get { return upgradeTechReq; } }
 
 		[KSPEvent(guiActive = true, guiName = "Activate Generator", active = true)]
 		public void ActivateGenerator() {
@@ -84,7 +86,7 @@ namespace FNPlugin {
 			if (ResearchAndDevelopment.Instance == null) { return;}
 			if (isupgraded || ResearchAndDevelopment.Instance.Science < upgradeCost) { return; }
 			upgradePartModule ();
-			ResearchAndDevelopment.Instance.Science = ResearchAndDevelopment.Instance.Science - upgradeCost;
+            ResearchAndDevelopment.Instance.AddScience(-upgradeCost, TransactionReasons.RnDPartPurchase);
 		}
 
         [KSPEvent(guiName = "Swap Type", guiActiveEditor = false, guiActiveUnfocused = false, guiActive = false)]
@@ -125,28 +127,12 @@ namespace FNPlugin {
 		}
 
         public void OnEditorAttach() {
-            foreach (AttachNode attach_node in part.attachNodes) {
-                if (attach_node.attachedPart != null) {
-                    List<FNThermalSource> sources = attach_node.attachedPart.FindModulesImplementing<FNThermalSource>();
-                    if (sources.Count > 0) {
-                        myAttachedReactor = sources.First();
-                        if (myAttachedReactor != null) {
-                            if (myAttachedReactor is FNFusionReactor && isupgraded) {
-                                // if we're attaching to a fusion reactor, swap over to direct conversion if we can
-                                generatorType = altUpgradedName;
-                                chargedParticleMode = true;
-                            } else if (myAttachedReactor is FNAmatCatFissionFusionReactor && isupgraded) {
-                                // if we're attaching to a antimatter initiated reactor, swap over to direct conversion if we can
-                                generatorType = altUpgradedName;
-                                chargedParticleMode = true;
-                            } else { // otherwise use a standard thermal generator
-                                generatorType = upgradedName;
-                                chargedParticleMode = false;
-                            }
-                            break;
-                        }
-                    }
-                }
+            List<IThermalSource> source_list = part.attachNodes.Where(atn => atn.attachedPart != null).SelectMany(atn => atn.attachedPart.FindModulesImplementing<IThermalSource>()).ToList();
+            myAttachedReactor = source_list.FirstOrDefault();
+            if (myAttachedReactor != null && myAttachedReactor is IChargedParticleSource && (myAttachedReactor as IChargedParticleSource).ChargedParticleRatio > 0)
+            {
+                generatorType = altUpgradedName;
+                chargedParticleMode = true;
             }
         }
 
@@ -156,7 +142,8 @@ namespace FNPlugin {
 			base.OnStart (state);
             generatorType = originalName;
             if (state == StartState.Editor) {
-                if (hasTechsRequiredToUpgrade()) {
+                if (this.HasTechsRequiredToUpgrade())
+                {
                     isupgraded = true;
                     hasrequiredupgrade = true;
                     upgradePartModule();
@@ -165,7 +152,8 @@ namespace FNPlugin {
                 return;
             }
 
-            if (hasTechsRequiredToUpgrade()) {
+            if (this.HasTechsRequiredToUpgrade())
+            {
                 hasrequiredupgrade = true;
             }
 
@@ -196,18 +184,8 @@ namespace FNPlugin {
 				upgradePartModule ();
 			}
 
-			foreach (AttachNode attach_node in part.attachNodes) {
-				if(attach_node.attachedPart != null) {
-					List<FNThermalSource> sources = attach_node.attachedPart.FindModulesImplementing<FNThermalSource> ();
-					if (sources.Count > 0) {
-						myAttachedReactor = sources.First ();
-						if (myAttachedReactor != null) {
-							break;
-						}
-					}
-				}
-			}
-
+            List<IThermalSource> source_list = part.attachNodes.Where(atn => atn.attachedPart != null).SelectMany(atn => atn.attachedPart.FindModulesImplementing<IThermalSource>()).ToList();
+            myAttachedReactor = source_list.FirstOrDefault();
 			print("[KSP Interstellar] Configuring Generator");
 		}
 
@@ -286,27 +264,13 @@ namespace FNPlugin {
             return IsEnabled;
         }
 
-        public FNThermalSource getThermalSource() {
+        public IThermalSource getThermalSource() {
             return myAttachedReactor;
         }
-
-        public bool hasTechsRequiredToUpgrade() {
-            if (HighLogic.CurrentGame != null) {
-                if (HighLogic.CurrentGame.Mode == Game.Modes.CAREER) {
-                    if (upgradeTechReq != null) {
-                        if (PluginHelper.hasTech(upgradeTechReq)) {
-                            return true;
-                        }
-                    }
-                } else {
-                    return true;
-                }
-            }
-            return false;
-        }
+               
 
 		public void updateGeneratorPower() {
-			hotBathTemp = myAttachedReactor.getCoreTemp();
+			hotBathTemp = myAttachedReactor.CoreTemperature;
             float heat_exchanger_thrust_divisor = 1;
             if (radius > myAttachedReactor.getRadius()) {
                 heat_exchanger_thrust_divisor = myAttachedReactor.getRadius() * myAttachedReactor.getRadius() / radius / radius;
@@ -316,8 +280,13 @@ namespace FNPlugin {
             if (myAttachedReactor.getRadius() <= 0 || radius <= 0) {
                 heat_exchanger_thrust_divisor = 1;
             }
-			maxThermalPower = myAttachedReactor.getThermalPower()*heat_exchanger_thrust_divisor;
-            maxChargedPower = myAttachedReactor.getChargedPower()*heat_exchanger_thrust_divisor;
+			maxThermalPower = myAttachedReactor.MaximumPower*heat_exchanger_thrust_divisor;
+
+            if (myAttachedReactor is IChargedParticleSource) 
+                maxChargedPower = (myAttachedReactor as IChargedParticleSource).MaximumChargedPower * heat_exchanger_thrust_divisor;
+            else 
+                maxChargedPower = 0;
+            
 			coldBathTemp = (float) FNRadiator.getAverageRadiatorTemperatureForVessel (vessel);
 		}
 

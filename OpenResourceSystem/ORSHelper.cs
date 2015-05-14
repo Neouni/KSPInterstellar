@@ -6,6 +6,27 @@ using UnityEngine;
 
 namespace OpenResourceSystem {
     public class ORSHelper {
+
+        public static double ToLatitude(double lat) 
+        {
+            int lat_s = ((int)Math.Ceiling(Math.Abs(lat / 90)) % 2);
+            lat = lat % 90;
+            if (lat_s == 0) {
+                lat = (90 * Math.Sign(lat) - lat) * (-1);
+            }
+            return lat;
+        }
+
+        public static double ToLongitude(double lng) 
+        {
+            int lng_s = ((int)Math.Ceiling(Math.Abs(lng / 180)) % 2);
+            lng = lng % 180;
+            if (lng_s == 0) {
+                lng = (180 * Math.Sign(lng) - lng) * (-1);
+            }
+            return lng;
+        }
+
         public static float getMaxAtmosphericAltitude(CelestialBody body) {
             if (!body.atmosphere) {
                 return 0;
@@ -18,9 +39,8 @@ namespace OpenResourceSystem {
         }
 
         public static double fixedRequestResource(Part part, string resourcename, double resource_amount) {
-            List<PartResource> prl = new List<PartResource>();
+            List<PartResource> prl = part.GetConnectedResources(resourcename).ToList();
             List<Part> parts = new List<Part>();
-            part.GetConnectedResources(PartResourceLibrary.Instance.GetDefinition(resourcename).id, prl);
             ResourceFlowMode flow = PartResourceLibrary.Instance.GetDefinition(resourcename).resourceFlowMode;
             prl = prl.Where(p => p.flowState == true).ToList();
             double max_available = 0;
