@@ -53,7 +53,8 @@ namespace FNPlugin{
                 double isp = Math.Sqrt(joules_per_amu * 2.0 / GameConstants.ATOMIC_MASS_UNIT) / GameConstants.STANDARD_GRAVITY;
                 FloatCurve new_isp = new FloatCurve();
                 new_isp.Add(0, (float)isp, 0, 0);
-                _attached_engine.atmosphereCurve = new_isp;
+                //_attached_engine.atmosphereCurve = new_isp;
+                _attached_engine.atmCurve = new_isp;
 
                 double charged_power_received = consumeFNResource(max_power * TimeWarp.fixedDeltaTime * _attached_engine.currentThrottle, FNResourceManager.FNRESOURCE_CHARGED_PARTICLES) / TimeWarp.fixedDeltaTime;
                 consumeFNResource(charged_power_received * TimeWarp.fixedDeltaTime, FNResourceManager.FNRESOURCE_WASTEHEAT);

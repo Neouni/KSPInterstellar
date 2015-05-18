@@ -249,7 +249,7 @@ namespace FNPlugin
             {
                 return 0;
             }
-            return (float)body.atmosphereDepth;
+            return (float) body.atmosphereDepth;
         }
 
         public static float getScienceMultiplier(int refbody, bool landed)

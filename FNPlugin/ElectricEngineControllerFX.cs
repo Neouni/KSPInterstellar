@@ -320,7 +320,8 @@ namespace FNPlugin
         {
             FloatCurve newISP = new FloatCurve();
             newISP.Add(0, (float)(baseISP * _current_propellant.IspMultiplier));
-            _attached_engine.atmosphereCurve = newISP;
+            //_attached_engine.atmosphereCurve = newISP;
+            _attached_engine.atmCurve = newISP;
         }
 
         protected void updatePropellantBar()

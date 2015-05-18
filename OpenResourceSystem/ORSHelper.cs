@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -31,7 +31,7 @@ namespace OpenResourceSystem {
             if (!body.atmosphere) {
                 return 0;
             }
-            return (float)body.atmosphereDepth;
+            return (float) body.atmosphereDepth;
         }
 
         public static float fixedRequestResource(Part part, string resourcename, float resource_amount) {

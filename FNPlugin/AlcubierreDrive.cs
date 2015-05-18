@@ -1,4 +1,4 @@
-﻿extern alias ORSv1_4_3;
+extern alias ORSv1_4_3;
 using ORSv1_4_3::OpenResourceSystem;
 
 using System;
