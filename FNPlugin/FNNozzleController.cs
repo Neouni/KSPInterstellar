@@ -315,7 +315,8 @@ namespace FNPlugin{
 				minISP = maxISP * 0.4f;
                 newISP.Add(0, Mathf.Min(maxISP, 2997.13f), 0, 0);
                 newISP.Add(1, Mathf.Min(minISP, 2997.13f), 0, 0);
-				myAttachedEngine.useVelocityCurve = false;
+				//myAttachedEngine.useVelocityCurve = false;
+				myAttachedEngine.useVelCurve = false;
 				myAttachedEngine.useEngineResponseTime = false;
 			} else {
 				if (myAttachedReactor.shouldScaleDownJetISP ()) {
@@ -332,13 +333,16 @@ namespace FNPlugin{
 				vCurve.Add((float)(maxISP*g0*1.0/3.0), 1.0f);
 				vCurve.Add((float)(maxISP*g0), 1.0f);
 				vCurve.Add ((float)(maxISP*g0*4.0/3.0), 0);
-				myAttachedEngine.useVelocityCurve = true;
+				//myAttachedEngine.useVelocityCurve = true;
+				myAttachedEngine.useVelCurve = true;				
 				myAttachedEngine.useEngineResponseTime = true;
 				myAttachedEngine.ignitionThreshold = 0.01f;
 			}
 
-			myAttachedEngine.atmosphereCurve = newISP;
-			myAttachedEngine.velocityCurve = vCurve;
+			//myAttachedEngine.atmosphereCurve = newISP;
+			myAttachedEngine.atmCurve = newISP;
+			//myAttachedEngine.velocityCurve = vCurve;
+			myAttachedEngine.velCurve = vCurve;
 			assThermalPower = myAttachedReactor.MaximumPower;
             if (myAttachedReactor is InterstellarFusionReactor) {
                 assThermalPower = assThermalPower * 0.95f;
@@ -375,7 +379,8 @@ namespace FNPlugin{
 
         public void estimateEditorPerformance() {
             bool attached_reactor_upgraded = false;
-            FloatCurve atmospherecurve = new FloatCurve();
+            //FloatCurve atmospherecurve = new FloatCurve();
+            FloatCurve atmcurve = new FloatCurve();
             float thrust = 0;
             if (myAttachedReactor != null) {
                 if (myAttachedReactor is IUpgradeableModule) {
@@ -386,15 +391,20 @@ namespace FNPlugin{
                 }
                 maxISP = (float)(Math.Sqrt((double)myAttachedReactor.CoreTemperature) * isp_temp_rat * ispMultiplier);
                 minISP = maxISP * 0.4f;
-                atmospherecurve.Add(0, maxISP, 0, 0);
-                atmospherecurve.Add(1, minISP, 0, 0);
+                //atmospherecurve.Add(0, maxISP, 0, 0);
+                //atmospherecurve.Add(1, minISP, 0, 0);
+                atmcurve.Add(0, maxISP, 0, 0);
+                atmcurve.Add(1, minISP, 0, 0);
                 thrust = (float)(2 * myAttachedReactor.MaximumPower * 1000 / g0 / maxISP);
                 myAttachedEngine.maxThrust = thrust;
-                myAttachedEngine.atmosphereCurve = atmospherecurve;
+                //myAttachedEngine.atmosphereCurve = atmospherecurve;
+                myAttachedEngine.atmCurve = atmcurve;
             } else {
-                atmospherecurve.Add(0, 0.00001f, 0, 0);
+                //atmospherecurve.Add(0, 0.00001f, 0, 0);
+                atmcurve.Add(0, 0.00001f, 0, 0);
                 myAttachedEngine.maxThrust = thrust;
-                myAttachedEngine.atmosphereCurve = atmospherecurve;
+                //myAttachedEngine.atmosphereCurve = atmospherecurve;
+                myAttachedEngine.atmCurve = atmcurve;
             }
         }
 
@@ -405,7 +415,8 @@ namespace FNPlugin{
 				}
 				updateIspEngineParams ();
 				float curve_eval_point = (float)Math.Min (FlightGlobals.getStaticPressure (vessel.transform.position), 1.0);
-				float currentIsp = myAttachedEngine.atmosphereCurve.Evaluate (curve_eval_point);
+				//float currentIsp = myAttachedEngine.atmosphereCurve.Evaluate (curve_eval_point);
+				float currentIsp = myAttachedEngine.atmCurve.Evaluate (curve_eval_point);
 				double ispratio = currentIsp / maxISP;
 				this.current_isp = currentIsp;
 				// scale down thrust if it's attached to the wrong sized reactor
@@ -460,7 +471,9 @@ namespace FNPlugin{
                 //double additional_thrust_compensator = myAttachedEngine.finalThrust / (myAttachedEngine.maxThrust * myAttachedEngine.currentThrottle)/ispratio;
 				double engine_thrust = engineMaxThrust/myAttachedEngine.thrustPercentage*100;
 				// engine thrust fixed
-				//print ("A: " + engine_thrust*myAttachedEngine.velocityCurve.Evaluate((float)vessel.srf_velocity.magnitude));
+				//print ("A: " + //engine_thrust*myAttachedEngine.velocityCurve.Evaluate((float)vessel.srf_velocity.magnitude));
+                if (!double.IsInfinity(engine_thrust) && !double.IsNaN(engine_thrust)) {
+engine_thrust*myAttachedEngine.veloCurve.Evaluate((float)vessel.srf_velocity.magnitude));
                 if (!double.IsInfinity(engine_thrust) && !double.IsNaN(engine_thrust)) {
                     if (isLFO) {
                         myAttachedEngine.maxThrust = (float)(2.2222 * engine_thrust);
@@ -475,8 +488,10 @@ namespace FNPlugin{
                 if (current_isp > 0) {
                     double vcurve_at_current_velocity = 1;
                     
-                    if (myAttachedEngine.useVelocityCurve && myAttachedEngine.velocityCurve != null) {
-                        vcurve_at_current_velocity = myAttachedEngine.velocityCurve.Evaluate((float)vessel.srf_velocity.magnitude);
+                    //if (myAttachedEngine.useVelocityCurve && myAttachedEngine.velocityCurve != null) {
+                        //vcurve_at_current_velocity = myAttachedEngine.velocityCurve.Evaluate((float)vessel.srf_velocity.magnitude);
+                    if (myAttachedEngine.useVelCurve && myAttachedEngine.velCurve != null) {
+                        vcurve_at_current_velocity = myAttachedEngine.velCurve.Evaluate((float)vessel.srf_velocity.magnitude);
                     }
                     //if (!double.IsNaN(additional_thrust_compensator) && !double.IsInfinity(additional_thrust_compensator)) {
                         //vcurve_at_current_velocity = additional_thrust_compensator;
@@ -495,8 +510,10 @@ namespace FNPlugin{
                 if (myAttachedEngine.realIsp > 0) {
                     atmospheric_limit = getAtmosphericLimit();
                     double vcurve_at_current_velocity = 1;
-                    if (myAttachedEngine.useVelocityCurve) {
-                        vcurve_at_current_velocity = myAttachedEngine.velocityCurve.Evaluate((float)vessel.srf_velocity.magnitude);
+                    //if (myAttachedEngine.useVelocityCurve) {
+                        //vcurve_at_current_velocity = myAttachedEngine.velocityCurve.Evaluate((float)vessel.srf_velocity.magnitude);
+                    if (myAttachedEngine.useVelCurve) {
+                        vcurve_at_current_velocity = myAttachedEngine.velCurve.Evaluate((float)vessel.srf_velocity.magnitude);
                     }
                     fuel_flow_rate = myAttachedEngine.maxThrust / myAttachedEngine.realIsp / g0 / 0.005 * TimeWarp.fixedDeltaTime;
                     if (vcurve_at_current_velocity > 0 && !double.IsInfinity(vcurve_at_current_velocity) && !double.IsNaN(vcurve_at_current_velocity)) {
