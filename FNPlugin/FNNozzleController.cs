@@ -473,8 +473,6 @@ namespace FNPlugin{
 				// engine thrust fixed
 				//print ("A: " + //engine_thrust*myAttachedEngine.velocityCurve.Evaluate((float)vessel.srf_velocity.magnitude));
                 if (!double.IsInfinity(engine_thrust) && !double.IsNaN(engine_thrust)) {
-engine_thrust*myAttachedEngine.veloCurve.Evaluate((float)vessel.srf_velocity.magnitude));
-                if (!double.IsInfinity(engine_thrust) && !double.IsNaN(engine_thrust)) {
                     if (isLFO) {
                         myAttachedEngine.maxThrust = (float)(2.2222 * engine_thrust);
                     } else {
