@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -243,13 +243,13 @@ namespace FNPlugin
             return v1p;
         }
 
-        public static float getMaxAtmosphericAltitude(CelestialBody body)
+        public static double getMaxAtmosphericAltitude(CelestialBody body)
         {
             if (!body.atmosphere)
             {
                 return 0;
             }
-            return (float) body.atmosphereDepth;
+            return body.atmosphereDepth;
         }
 
         public static float getScienceMultiplier(int refbody, bool landed)
