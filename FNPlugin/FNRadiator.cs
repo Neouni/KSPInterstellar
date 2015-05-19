@@ -411,7 +411,7 @@ namespace FNPlugin {
         {
             const String KSPShader = "KSP/Emissive/Bumped Specular";
             float currentTemperature = getRadiatorTemperature();
-            float maxTemperature = part.maxTemp;
+            float maxTemperature = (float)part.maxTemp;
 
             double temperatureRatio = currentTemperature / maxTemperature;
             Color emissiveColor = new Color((float)(Math.Pow(temperatureRatio, 3)), 0.0f, 0.0f, 1.0f);
