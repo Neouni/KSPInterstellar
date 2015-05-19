@@ -1,6 +1,2 @@
-language: c
-
-install:
-  - sudo apt-get install mono-devel mono-gmcs nunit-console
-script:
-  - xbuild WarpPlugin.sln
+language: csharp
+solution: WarpPlugin.sln
