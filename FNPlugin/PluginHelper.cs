@@ -249,7 +249,7 @@ namespace FNPlugin
             {
                 return 0;
             }
-            return (float)-body.atmosphereScaleHeight * 1000.0f * Mathf.Log(1e-6f);
+            return (float)body.atmosphereDepth;
         }
 
         public static float getScienceMultiplier(int refbody, bool landed)
