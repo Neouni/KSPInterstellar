@@ -18,7 +18,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>bin\$(Configuration)\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -26,13 +26,13 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release KSP 0.90|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release KSP 0.90</OutputPath>
+    <OutputPath>bin\$(Configuration)\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release KSP 0.25|AnyCPU'">
-    <OutputPath>bin\Release KSP 0.25\</OutputPath>
+    <OutputPath>bin\$(Configuration)\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
@@ -41,7 +41,7 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug KSP 0.90|AnyCPU'">
-    <OutputPath>bin\Debug KSP 0.90</OutputPath>
+    <OutputPath>bin\$(Configuration)\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <Optimize>false</Optimize>
     <DebugType>pdbonly</DebugType>
@@ -50,7 +50,7 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release KSP 1.02|AnyCPU'">
-    <OutputPath>bin\Release KSP 1.02\</OutputPath>
+    <OutputPath>bin\$(Configuration)\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>

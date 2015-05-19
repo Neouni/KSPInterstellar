@@ -37,8 +37,7 @@ namespace FNPlugin
 			if (state == StartState.Editor) {return;}
 
 			ModuleEngines curEngineT = (ModuleEngines)this.part.Modules ["ModuleEngines"];
-			//minISP = curEngineT.atmosphereCurve.Evaluate(0);
-			minISP = curEngineT.atmCurve.Evaluate(0);
+			minISP = curEngineT.atmosphereCurve.Evaluate(0);
 
             standard_deut_rate = curEngineT.propellants.FirstOrDefault(pr => pr.name == InterstellarResourcesConfiguration.Instance.Deuterium).ratio;
             standard_lith_rate = curEngineT.propellants.FirstOrDefault(pr => pr.name == InterstellarResourcesConfiguration.Instance.Tritium).ratio;
@@ -141,8 +140,7 @@ namespace FNPlugin
                 //curEngineT.propellants[2].ratio = (float)(standard_lith_rate / throttle / throttle);
                 FloatCurve newISP = new FloatCurve();
                 newISP.Add(0, (float)(minISP / throttle));
-                //curEngineT.atmosphereCurve = newISP;
-                curEngineT.atmCurve = newISP;
+                curEngineT.atmosphereCurve = newISP;
                 if (power >= 2500 * TimeWarp.fixedDeltaTime) {
                     curEngineT.maxThrust = 1100;
                 } else {
@@ -162,4 +160,3 @@ namespace FNPlugin
 	}
 
 }
-

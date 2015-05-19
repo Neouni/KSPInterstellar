@@ -243,13 +243,13 @@ namespace FNPlugin
             return v1p;
         }
 
-        public static double getMaxAtmosphericAltitude(CelestialBody body)
+        public static float getMaxAtmosphericAltitude(CelestialBody body)
         {
             if (!body.atmosphere)
             {
                 return 0;
             }
-            return body.atmosphereDepth;
+            return (float)body.atmosphereDepth;
         }
 
         public static float getScienceMultiplier(int refbody, bool landed)

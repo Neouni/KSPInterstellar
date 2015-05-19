@@ -300,7 +300,7 @@ namespace FNPlugin {
 				float pressure = (float) FlightGlobals.getStaticPressure (vessel.transform.position);
 				float dynamic_pressure = (float) (0.5*pressure*1.2041*vessel.srf_velocity.sqrMagnitude);
 				pressure += dynamic_pressure;
-				float low_temp = (float)FlightGlobals.getExternalTemperature(vessel.transform.position);
+				float low_temp = (float) FlightGlobals.getExternalTemperature (vessel.transform.position);
 
                 float delta_temp = Mathf.Max(0, (float)current_rad_temp - low_temp);
 				conv_power_dissip = pressure * delta_temp * radiatorArea * rad_const_h/1e6f * TimeWarp.fixedDeltaTime*convectiveBonus;
