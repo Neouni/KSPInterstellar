@@ -1,5 +1,5 @@
-extern alias ORSv1_4_2;
-using ORSv1_4_2::OpenResourceSystem;
+extern alias ORSv1_4_3;
+using ORSv1_4_3::OpenResourceSystem;
 
 using System;
 using System.Collections.Generic;
@@ -280,7 +280,7 @@ namespace FNPlugin{
 				minISP = maxISP * 0.4f;
 				newISP.Add (0, Mathf.Min(maxISP, 2997.13f), 0, 0);
                 newISP.Add(1, Mathf.Min(minISP, 2997.13f), 0, 0);
-				myAttachedEngine.useVelocityCurve = false;
+				myAttachedEngine.useVelCurve = false;
 				myAttachedEngine.useEngineResponseTime = false;
 			} else {
 				if (myAttachedReactor.shouldScaleDownJetISP ()) {
@@ -297,13 +297,13 @@ namespace FNPlugin{
 				vCurve.Add((float)(maxISP*g0*1.0/3.0), 0.9f);
 				vCurve.Add((float)(maxISP*g0), 1.0f);
 				vCurve.Add ((float)(maxISP*g0*4.0/3.0), 0);
-				myAttachedEngine.useVelocityCurve = true;
+                myAttachedEngine.useVelCurve = true;
 				myAttachedEngine.useEngineResponseTime = true;
 				myAttachedEngine.ignitionThreshold = 0.01f;
 			}
 
 			myAttachedEngine.atmosphereCurve = newISP;
-			myAttachedEngine.velocityCurve = vCurve;
+			myAttachedEngine.velCurve = vCurve;
 			assThermalPower = myAttachedReactor.MaximumPower;
 		}
 
@@ -404,8 +404,8 @@ namespace FNPlugin{
 				// amount of fuel being used at max throttle with no atmospheric limits
                 if (current_isp > 0) {
                     double vcurve_at_current_velocity = 1;
-                    if (myAttachedEngine.useVelocityCurve) {
-                        vcurve_at_current_velocity = myAttachedEngine.velocityCurve.Evaluate((float)vessel.srf_velocity.magnitude);
+                    if (myAttachedEngine.useVelCurve) {
+                        vcurve_at_current_velocity = myAttachedEngine.velCurve.Evaluate((float)vessel.srf_velocity.magnitude);
                     }
                     fuel_flow_rate = engine_thrust / current_isp / g0 / 0.005 * TimeWarp.fixedDeltaTime;
                     if (vcurve_at_current_velocity > 0) {
@@ -417,8 +417,8 @@ namespace FNPlugin{
                 if (myAttachedEngine.realIsp > 0) {
                     atmospheric_limit = getAtmosphericLimit();
                     double vcurve_at_current_velocity = 1;
-                    if (myAttachedEngine.useVelocityCurve) {
-                        vcurve_at_current_velocity = myAttachedEngine.velocityCurve.Evaluate((float)vessel.srf_velocity.magnitude);
+                    if (myAttachedEngine.useVelCurve) {
+                        vcurve_at_current_velocity = myAttachedEngine.velCurve.Evaluate((float)vessel.srf_velocity.magnitude);
                     }
                     fuel_flow_rate = myAttachedEngine.maxThrust / myAttachedEngine.realIsp / g0 / 0.005 * TimeWarp.fixedDeltaTime/vcurve_at_current_velocity;
                 }else {

@@ -194,7 +194,6 @@ namespace FNPlugin {
                 if (hasTechsRequiredToUpgrade()) {
                     isupgraded = true;
                     hasrequiredupgrade = true;
-                    isupgraded = true;
                 }
                 return;
             }
@@ -208,7 +207,9 @@ namespace FNPlugin {
 				anim [animName].layer = 1;
 
 				if (radiatorIsEnabled) {
-					anim.Blend (animName, 1, 0);
+					anim[animName].normalizedTime = 1.0f;
+					anim[animName].enabled = true;
+					anim.Sample();
 				} else {
 					//anim.Blend (animName, 0, 0);
 				}
@@ -275,16 +276,16 @@ namespace FNPlugin {
 		}
 
 		public override void OnFixedUpdate() {
-			float atmosphere_height = vessel.mainBody.maxAtmosphereAltitude;
+			float atmosphere_height = (float)vessel.mainBody.atmosphereDepth;
 			float vessel_height = (float) vessel.mainBody.GetAltitude (vessel.transform.position);
 			float conv_power_dissip = 0;
 			if (vessel.altitude <= PluginHelper.getMaxAtmosphericAltitude(vessel.mainBody)) {
 				float pressure = (float) FlightGlobals.getStaticPressure (vessel.transform.position);
 				float dynamic_pressure = (float) (0.5*pressure*1.2041*vessel.srf_velocity.sqrMagnitude/101325.0);
 				pressure += dynamic_pressure;
-				float low_temp = FlightGlobals.getExternalTemperature (vessel.transform.position);
+				float low_temp = (float)FlightGlobals.getExternalTemperature(vessel.transform.position);
 
-				float delta_temp = Mathf.Max(0,radiatorTemp - low_temp);
+                float delta_temp = Mathf.Max(0, (float)current_rad_temp - low_temp);
 				conv_power_dissip = pressure * delta_temp * radiatorArea * rad_const_h/1e6f * TimeWarp.fixedDeltaTime*convectiveBonus;
 				if (!radiatorIsEnabled) {
 					conv_power_dissip = conv_power_dissip / 2.0f;
@@ -410,7 +411,7 @@ namespace FNPlugin {
         {
             const String KSPShader = "KSP/Emissive/Bumped Specular";
             float currentTemperature = getRadiatorTemperature();
-            float maxTemperature = part.maxTemp;
+            float maxTemperature = (float)part.maxTemp;
 
             double temperatureRatio = currentTemperature / maxTemperature;
             Color emissiveColor = new Color((float)(Math.Pow(temperatureRatio, 3)), 0.0f, 0.0f, 1.0f);
