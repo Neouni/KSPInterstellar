@@ -47,6 +47,11 @@ namespace FNPlugin {
 		[KSPField(isPersistant = false, guiActive = true, guiName = "Upgrade")]
 		public string upgradeCostStr;
 
+        [KSPField(isPersistant = false)]
+        public float maxQ = 150.0f;
+		[KSPField(isPersistant = false, guiActive = true, guiName = "Max. Dyn. Press.")]
+		public string maxQStr;
+
 		//public static double stefan_const = 5.6704e-8;
         protected static float rad_const_h = 1000;
         protected static double alpha = 0.001998001998001998001998001998;
@@ -135,6 +140,17 @@ namespace FNPlugin {
 		public void DeployRadiator() {
 			if (!isDeployable) {
 				return;
+			}
+			if (vessel.altitude <= PluginHelper.getMaxAtmosphericAltitude(vessel.mainBody)) {
+				float pressure = (float) FlightGlobals.getStaticPressure (vessel.transform.position);
+				float dynamic_pressure = (float) (0.5*pressure*1.2041*vessel.srf_velocity.sqrMagnitude);
+				if (dynamic_pressure >= maxQ) {
+					ScreenMessages.PostScreenMessage(
+							"Radiator deployment aborted: Dynamic pressure exceeds part tolerance.",
+							5.0f,
+							ScreenMessageStyle.UPPER_CENTER);
+					return;
+				}
 			}
 			anim [animName].speed = 1f;
 			anim [animName].normalizedTime = 0f;
@@ -244,6 +260,7 @@ namespace FNPlugin {
 
 
 			radiatorTempStr = radiatorTemp + "K";
+			maxQStr = maxQ + " Pa";
             this.part.force_activate();
 		}
 
@@ -281,9 +298,9 @@ namespace FNPlugin {
 			float conv_power_dissip = 0;
 			if (vessel.altitude <= PluginHelper.getMaxAtmosphericAltitude(vessel.mainBody)) {
 				float pressure = (float) FlightGlobals.getStaticPressure (vessel.transform.position);
-				float dynamic_pressure = (float) (0.5*pressure*1.2041*vessel.srf_velocity.sqrMagnitude/101325.0);
+				float dynamic_pressure = (float) (0.5*pressure*1.2041*vessel.srf_velocity.sqrMagnitude);
 				pressure += dynamic_pressure;
-				float low_temp = (float)FlightGlobals.getExternalTemperature(vessel.transform.position);
+				float low_temp = (float) FlightGlobals.getExternalTemperature (vessel.transform.position);
 
                 float delta_temp = Mathf.Max(0, (float)current_rad_temp - low_temp);
 				conv_power_dissip = pressure * delta_temp * radiatorArea * rad_const_h/1e6f * TimeWarp.fixedDeltaTime*convectiveBonus;
@@ -292,7 +309,7 @@ namespace FNPlugin {
 				}
 				convectedThermalPower = consumeFNResource (conv_power_dissip, FNResourceManager.FNRESOURCE_WASTEHEAT) / TimeWarp.fixedDeltaTime;
 
-				if (radiatorIsEnabled && dynamic_pressure > 1.4854428818159388107574636072046e-3 && isDeployable) {
+				if (radiatorIsEnabled && dynamic_pressure > maxQ && isDeployable) {
 					part.deactivate();
 
 					//part.breakingForce = 1;
@@ -400,7 +417,11 @@ namespace FNPlugin {
             float thermal_power_dissip5 = (float)(GameConstants.stefan_const * radiatorArea * Math.Pow(1800, 4) / 1e6);
             float thermal_power_dissip6 = (float)(GameConstants.stefan_const * radiatorArea * Math.Pow(2400, 4) / 1e6);
             float thermal_power_dissip7 = (float)(GameConstants.stefan_const * radiatorArea * Math.Pow(3000, 4) / 1e6);
-            return String.Format("Maximum Waste Heat Radiated\n Base: {0} MW\n Upgraded: {1} MW\n-----\nRadiator Performance at:\n600K: {2} MW\n1200K: {3} MW\n1800K: {4} MW\n2400K: {5} MW\n3000K: {6} MW\n", thermal_power_dissip, thermal_power_dissip2, thermal_power_dissip3, thermal_power_dissip4, thermal_power_dissip5, thermal_power_dissip6, thermal_power_dissip7);
+            string infoStr = String.Format("Maximum Waste Heat Radiated\n Base: {0} MW\n Upgraded: {1} MW\n-----\nRadiator Performance at:\n600K: {2} MW\n1200K: {3} MW\n1800K: {4} MW\n2400K: {5} MW\n3000K: {6} MW\n", thermal_power_dissip, thermal_power_dissip2, thermal_power_dissip3, thermal_power_dissip4, thermal_power_dissip5, thermal_power_dissip6, thermal_power_dissip7);
+			if (isDeployable) {
+				infoStr += String.Format("-----\nBreaks if dynamic pressure exceeds {0} Pa", maxQ);
+			}
+			return infoStr;
 		}
 
         public override int getPowerPriority() {
